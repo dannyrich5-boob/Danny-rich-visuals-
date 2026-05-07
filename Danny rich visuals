@@ -1,0 +1,317 @@
+import { useState, useEffect, useRef } from "react";
+
+// Logo SVG embedded directly from the uploaded image description
+const LogoSVG = ({ size = 40, white = true }) => (
+  <svg width={size * 2.8} height={size * 0.85} viewBox="0 0 280 85" fill="none" xmlns="http://www.w3.org/2000/svg">
+    {/* Star/burst icon */}
+    <g transform="translate(42,42)">
+      {[0,30,60,90,120,150,180,210,240,270,300,330].map((angle, i) => (
+        <rect key={i} x="-3" y="-38" width="6" height="18" rx="2"
+          fill={white ? "white" : "#a855f7"}
+          transform={`rotate(${angle})`} opacity={i % 2 === 0 ? 1 : 0.7} />
+      ))}
+      <rect x="-9" y="-9" width="18" height="18" rx="3" fill="black" />
+      <circle cx="0" cy="0" r="5" fill={white ? "white" : "#a855f7"} />
+    </g>
+    {/* Text */}
+    <text x="95" y="35" fontFamily="'Arial Black', Arial" fontWeight="900" fontSize="22" fill={white ? "white" : "#a855f7"} letterSpacing="2">DANNY RICH</text>
+    <text x="95" y="62" fontFamily="'Arial Black', Arial" fontWeight="900" fontSize="22" fill={white ? "white" : "#a855f7"} letterSpacing="2">VISUALS</text>
+    <text x="260" y="62" fontFamily="serif" fontSize="12" fill={white ? "white" : "#a855f7"}>®</text>
+  </svg>
+);
+
+const NAV_LINKS = ["Home", "About", "Services", "Portfolio", "Booking", "Contact"];
+
+const SERVICES = [
+  { icon: "✦", title: "Flyer Design", desc: "Eye-catching flyers that command attention and communicate your message with power.", price: "From $15" },
+  { icon: "◈", title: "Social Media Design", desc: "Premium social media graphics that elevate your brand presence across all platforms.", price: "From $20" },
+  { icon: "◉", title: "Branding", desc: "Complete brand identity systems that make your business unforgettable.", price: "From $80" },
+  { icon: "◆", title: "Event Promotion", desc: "Stunning event visuals that build hype and drive attendance.", price: "From $25" },
+  { icon: "✸", title: "Church Media", desc: "Inspiring church flyers and media designs that spread your message.", price: "From $15" },
+  { icon: "⬡", title: "Logo Design", desc: "Distinctive logos crafted with precision to represent your brand identity.", price: "From $50" },
+  { icon: "◇", title: "Content Design", desc: "Creative content visuals for digital campaigns and marketing materials.", price: "From $20" },
+];
+
+const TESTIMONIALS = [
+  { name: "Marcus A.", role: "Event Organizer", text: "Danny Rich Visuals transformed my event flyers into something truly cinematic. My audience was stunned before they even arrived!" },
+  { name: "Pastor Grace O.", role: "Church Leader", text: "The church media designs are breathtaking. Our congregation loves the professionalism and spiritual depth in every piece." },
+  { name: "Tunde B.", role: "Business Owner", text: "My brand identity completely changed. Clients now see me as premium. Worth every penny and more." },
+  { name: "Chiamaka N.", role: "Content Creator", text: "Fastest turnaround and highest quality I've ever experienced. Danny Rich Visuals is my go-to designer forever." },
+];
+
+const PORTFOLIO_ITEMS = [
+  { cat: "Branding", label: "TechVision Brand", color: "#7c3aed", h: 280 },
+  { cat: "Flyer", label: "Night Event Flyer", color: "#4c1d95", h: 220 },
+  { cat: "Social", label: "Instagram Campaign", color: "#5b21b6", h: 260 },
+  { cat: "Logo", label: "Luxe Logo Design", color: "#6d28d9", h: 200 },
+  { cat: "Church", label: "Sunday Service Media", color: "#4c1d95", h: 240 },
+  { cat: "Event", label: "Music Fest Promo", color: "#7c3aed", h: 290 },
+  { cat: "Social", label: "Brand Story Posts", color: "#5b21b6", h: 210 },
+  { cat: "Branding", label: "Startup Identity", color: "#6d28d9", h: 250 },
+  { cat: "Flyer", label: "Business Grand Opening", color: "#4c1d95", h: 230 },
+];
+
+const STATS = [
+  { val: 100, label: "Designs Completed", suffix: "+" },
+  { val: 50, label: "Happy Clients", suffix: "+" },
+  { val: 3, label: "Years Experience", suffix: "+" },
+  { val: 24, label: "Creative Support", suffix: "/7" },
+];
+
+const PROCESS = [
+  { num: "01", title: "Understanding the Vision", desc: "Deep dive into your brand, goals, and creative direction." },
+  { num: "02", title: "Research & Concept", desc: "Market research and concept development tailored to your audience." },
+  { num: "03", title: "Design Execution", desc: "Crafting premium visuals with precision and creative excellence." },
+  { num: "04", title: "Review & Refinement", desc: "Collaborative feedback rounds to perfect every detail." },
+  { num: "05", title: "Final Delivery", desc: "High-quality files delivered in all formats you need." },
+];
+
+const FAQ = [
+  { q: "How long does a design take?", a: "Most designs are completed within 24–72 hours. Complex branding projects may take 5–7 days." },
+  { q: "Do you offer revisions?", a: "Yes! Every order includes revision rounds to ensure you're 100% satisfied." },
+  { q: "What formats will I receive?", a: "You'll receive print-ready and digital files: PNG, JPG, PDF, and editable source files upon request." },
+  { q: "How do I place an order?", a: "Use the Booking page, WhatsApp us directly, or send an email with your project details." },
+  { q: "Can I see samples before paying?", a: "Visit our Portfolio page to explore our full range of work across all design categories." },
+];
+
+// Animated counter hook
+function useCounter(target, active) {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    if (!active) return;
+    let start = 0;
+    const step = Math.ceil(target / 60);
+    const timer = setInterval(() => {
+      start += step;
+      if (start >= target) { setCount(target); clearInterval(timer); }
+      else setCount(start);
+    }, 25);
+    return () => clearInterval(timer);
+  }, [active, target]);
+  return count;
+}
+
+function StatCard({ val, label, suffix, active }) {
+  const count = useCounter(val, active);
+  return (
+    <div style={{ textAlign: "center", padding: "2rem" }}>
+      <div style={{ fontSize: "3.5rem", fontWeight: 900, background: "linear-gradient(135deg, #a855f7, #7c3aed)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", fontFamily: "'Arial Black', Arial" }}>
+        {count}{suffix}
+      </div>
+      <div style={{ color: "#d4b8ff", fontSize: "0.95rem", marginTop: "0.5rem", letterSpacing: "0.05em" }}>{label}</div>
+    </div>
+  );
+}
+
+// Scroll animation hook
+function useInView(ref) {
+  const [inView, setInView] = useState(false);
+  useEffect(() => {
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setInView(true); }, { threshold: 0.2 });
+    if (ref.current) obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, []);
+  return inView;
+}
+
+function FadeIn({ children, delay = 0, style = {} }) {
+  const ref = useRef();
+  const inView = useInView(ref);
+  return (
+    <div ref={ref} style={{
+      opacity: inView ? 1 : 0,
+      transform: inView ? "translateY(0)" : "translateY(40px)",
+      transition: `opacity 0.7s ease ${delay}s, transform 0.7s ease ${delay}s`,
+      ...style
+    }}>{children}</div>
+  );
+}
+
+export default function DannyRichVisuals() {
+  const [page, setPage] = useState("Home");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [portfolioFilter, setPortfolioFilter] = useState("All");
+  const [modalItem, setModalItem] = useState(null);
+  const [bookingStep, setBookingStep] = useState(1);
+  const [bookingData, setBookingData] = useState({ service: "", budget: "", deadline: "", name: "", email: "", phone: "", details: "" });
+  const [faqOpen, setFaqOpen] = useState(null);
+  const [toastMsg, setToastMsg] = useState("");
+  const statsRef = useRef();
+  const statsInView = useInView(statsRef);
+  const [heroAnim, setHeroAnim] = useState(false);
+  const [testimonialIdx, setTestimonialIdx] = useState(0);
+
+  useEffect(() => { setTimeout(() => setHeroAnim(true), 100); }, []);
+  useEffect(() => {
+    const h = () => setScrolled(window.scrollY > 40);
+    window.addEventListener("scroll", h);
+    return () => window.removeEventListener("scroll", h);
+  }, []);
+  useEffect(() => {
+    const t = setInterval(() => setTestimonialIdx(i => (i + 1) % TESTIMONIALS.length), 4000);
+    return () => clearInterval(t);
+  }, []);
+
+  const showToast = (msg) => { setToastMsg(msg); setTimeout(() => setToastMsg(""), 3000); };
+
+  const navigate = (p) => { setPage(p); setMenuOpen(false); window.scrollTo(0, 0); };
+
+  const cats = ["All", ...Array.from(new Set(PORTFOLIO_ITEMS.map(p => p.cat)))];
+  const filteredPortfolio = portfolioFilter === "All" ? PORTFOLIO_ITEMS : PORTFOLIO_ITEMS.filter(p => p.cat === portfolioFilter);
+
+  // Styles
+  const S = {
+    root: { fontFamily: "'Trebuchet MS', Tahoma, sans-serif", background: "#050508", color: "white", minHeight: "100vh", overflowX: "hidden" },
+    nav: {
+      position: "fixed", top: 0, left: 0, right: 0, zIndex: 1000,
+      background: scrolled ? "rgba(5,5,8,0.95)" : "transparent",
+      backdropFilter: scrolled ? "blur(20px)" : "none",
+      borderBottom: scrolled ? "1px solid rgba(168,85,247,0.15)" : "none",
+      transition: "all 0.4s ease", padding: "0 2rem", height: "70px",
+      display: "flex", alignItems: "center", justifyContent: "space-between"
+    },
+    navLink: (active) => ({
+      background: "none", border: "none", color: active ? "#a855f7" : "rgba(255,255,255,0.75)",
+      cursor: "pointer", fontSize: "0.9rem", fontWeight: active ? 700 : 500,
+      letterSpacing: "0.08em", textTransform: "uppercase", padding: "0.5rem 0.75rem",
+      transition: "color 0.3s", fontFamily: "inherit",
+      borderBottom: active ? "2px solid #a855f7" : "2px solid transparent",
+    }),
+    glowBtn: (small = false) => ({
+      background: "linear-gradient(135deg, #7c3aed, #a855f7)",
+      border: "none", borderRadius: "50px", color: "white",
+      padding: small ? "0.6rem 1.5rem" : "0.9rem 2.2rem",
+      fontSize: small ? "0.85rem" : "1rem", fontWeight: 700,
+      cursor: "pointer", letterSpacing: "0.05em",
+      boxShadow: "0 0 25px rgba(168,85,247,0.5)",
+      transition: "all 0.3s ease", fontFamily: "inherit",
+    }),
+    outlineBtn: (small = false) => ({
+      background: "transparent", border: "2px solid #a855f7",
+      borderRadius: "50px", color: "#a855f7",
+      padding: small ? "0.55rem 1.4rem" : "0.85rem 2.1rem",
+      fontSize: small ? "0.85rem" : "1rem", fontWeight: 700,
+      cursor: "pointer", letterSpacing: "0.05em",
+      transition: "all 0.3s ease", fontFamily: "inherit",
+    }),
+    glass: {
+      background: "rgba(168,85,247,0.05)", backdropFilter: "blur(10px)",
+      border: "1px solid rgba(168,85,247,0.2)", borderRadius: "20px",
+    },
+    section: { padding: "6rem 2rem", maxWidth: "1200px", margin: "0 auto" },
+    heading: { fontSize: "clamp(2rem, 5vw, 3.5rem)", fontWeight: 900, lineHeight: 1.1, fontFamily: "'Arial Black', Arial" },
+    subheading: { color: "#c4b5fd", fontSize: "1.1rem", lineHeight: 1.7, maxWidth: "600px" },
+    tag: { display: "inline-block", background: "rgba(168,85,247,0.15)", border: "1px solid rgba(168,85,247,0.3)", borderRadius: "50px", padding: "0.3rem 1rem", fontSize: "0.8rem", color: "#c4b5fd", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "1.5rem" },
+    input: { background: "rgba(168,85,247,0.07)", border: "1px solid rgba(168,85,247,0.3)", borderRadius: "12px", color: "white", padding: "0.9rem 1.2rem", fontSize: "1rem", width: "100%", outline: "none", fontFamily: "inherit", transition: "border 0.3s" },
+    select: { background: "rgba(10,5,20,0.9)", border: "1px solid rgba(168,85,247,0.3)", borderRadius: "12px", color: "white", padding: "0.9rem 1.2rem", fontSize: "1rem", width: "100%", outline: "none", fontFamily: "inherit" },
+  };
+
+  // ─── PAGES ───────────────────────────────────────────────────────────────────
+
+  const HomePage = () => (
+    <div>
+      {/* Hero */}
+      <section style={{ minHeight: "100vh", display: "flex", alignItems: "center", position: "relative", overflow: "hidden" }}>
+        {/* Bg effects */}
+        <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse at 60% 40%, rgba(124,58,237,0.25) 0%, transparent 60%), radial-gradient(ellipse at 20% 80%, rgba(88,28,221,0.15) 0%, transparent 50%)" }} />
+        <div style={{ position: "absolute", top: "10%", right: "5%", width: "500px", height: "500px", borderRadius: "50%", background: "radial-gradient(circle, rgba(168,85,247,0.12) 0%, transparent 70%)", animation: "pulse 4s ease-in-out infinite" }} />
+        {/* Floating shapes */}
+        {[...Array(6)].map((_, i) => (
+          <div key={i} style={{
+            position: "absolute",
+            width: `${20 + i * 15}px`, height: `${20 + i * 15}px`,
+            border: `1px solid rgba(168,85,247,${0.1 + i * 0.05})`,
+            borderRadius: i % 2 === 0 ? "50%" : "4px",
+            left: `${10 + i * 15}%`, top: `${20 + i * 10}%`,
+            animation: `float${i % 3} ${3 + i}s ease-in-out infinite`,
+            transform: `rotate(${i * 30}deg)`
+          }} />
+        ))}
+        <div style={{ ...S.section, display: "flex", flexDirection: "column", gap: "2rem", paddingTop: "10rem" }}>
+          <div style={{ ...S.tag, opacity: heroAnim ? 1 : 0, transition: "opacity 0.8s 0.2s" }}>Premium Creative Studio</div>
+          <h1 style={{
+            ...S.heading, fontSize: "clamp(2.5rem, 6vw, 5rem)",
+            opacity: heroAnim ? 1 : 0, transform: heroAnim ? "translateY(0)" : "translateY(30px)",
+            transition: "all 0.8s 0.3s ease",
+            maxWidth: "800px"
+          }}>
+            Turning Creative Ideas Into{" "}
+            <span style={{ background: "linear-gradient(135deg, #a855f7, #7c3aed, #c084fc)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+              Stunning Visual Experiences
+            </span>
+          </h1>
+          <p style={{
+            ...S.subheading,
+            opacity: heroAnim ? 1 : 0, transform: heroAnim ? "translateY(0)" : "translateY(20px)",
+            transition: "all 0.8s 0.5s ease",
+          }}>
+            Premium graphic designs that elevate brands, businesses, churches, and events through creativity and visual excellence.
+          </p>
+          <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", opacity: heroAnim ? 1 : 0, transition: "opacity 0.8s 0.7s" }}>
+            <button style={S.glowBtn()} onClick={() => navigate("Portfolio")} onMouseEnter={e => { e.target.style.transform = "translateY(-2px)"; e.target.style.boxShadow = "0 0 40px rgba(168,85,247,0.8)"; }} onMouseLeave={e => { e.target.style.transform = ""; e.target.style.boxShadow = "0 0 25px rgba(168,85,247,0.5)"; }}>
+              View Portfolio
+            </button>
+            <button style={S.glowBtn()} onClick={() => navigate("Booking")} onMouseEnter={e => { e.target.style.transform = "translateY(-2px)"; e.target.style.boxShadow = "0 0 40px rgba(168,85,247,0.8)"; }} onMouseLeave={e => { e.target.style.transform = ""; e.target.style.boxShadow = "0 0 25px rgba(168,85,247,0.5)"; }}>
+              Book a Design
+            </button>
+            <button style={S.outlineBtn()} onClick={() => navigate("Contact")} onMouseEnter={e => { e.target.style.background = "rgba(168,85,247,0.1)"; }} onMouseLeave={e => { e.target.style.background = "transparent"; }}>
+              Contact Us
+            </button>
+          </div>
+        </div>
+        {/* Scroll indicator */}
+        <div style={{ position: "absolute", bottom: "2rem", left: "50%", transform: "translateX(-50%)", animation: "bounce 2s infinite", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem" }}>
+          <span style={{ color: "rgba(168,85,247,0.6)", fontSize: "0.75rem", letterSpacing: "0.2em" }}>SCROLL</span>
+          <div style={{ width: "1px", height: "40px", background: "linear-gradient(to bottom, #a855f7, transparent)" }} />
+        </div>
+      </section>
+
+      {/* Stats */}
+      <section ref={statsRef} style={{ background: "rgba(124,58,237,0.05)", borderTop: "1px solid rgba(168,85,247,0.1)", borderBottom: "1px solid rgba(168,85,247,0.1)", padding: "3rem 2rem" }}>
+        <div style={{ maxWidth: "1200px", margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "1rem" }}>
+          {STATS.map((s, i) => <StatCard key={i} {...s} active={statsInView} />)}
+        </div>
+      </section>
+
+      {/* Services Overview */}
+      <section style={{ padding: "6rem 2rem" }}>
+        <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+          <FadeIn><div style={S.tag}>What We Do</div></FadeIn>
+          <FadeIn delay={0.1}><h2 style={{ ...S.heading, marginBottom: "1rem" }}>Creative Services<br /><span style={{ background: "linear-gradient(135deg,#a855f7,#7c3aed)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Built to Elevate</span></h2></FadeIn>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1.5rem", marginTop: "3rem" }}>
+            {SERVICES.slice(0, 6).map((sv, i) => (
+              <FadeIn key={i} delay={i * 0.08}>
+                <div style={{ ...S.glass, padding: "2rem", height: "100%", cursor: "pointer", transition: "all 0.3s" }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(168,85,247,0.6)"; e.currentTarget.style.boxShadow = "0 0 30px rgba(168,85,247,0.15)"; e.currentTarget.style.transform = "translateY(-5px)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(168,85,247,0.2)"; e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.transform = ""; }}>
+                  <div style={{ fontSize: "2rem", marginBottom: "1rem", color: "#a855f7" }}>{sv.icon}</div>
+                  <h3 style={{ fontWeight: 800, marginBottom: "0.5rem", fontSize: "1.1rem" }}>{sv.title}</h3>
+                  <p style={{ color: "#9ca3af", fontSize: "0.9rem", lineHeight: 1.6 }}>{sv.desc}</p>
+                  <div style={{ marginTop: "1.5rem", color: "#c4b5fd", fontWeight: 700, fontSize: "0.9rem" }}>{sv.price}</div>
+                </div>
+              </FadeIn>
+            ))}
+          </div>
+          <div style={{ textAlign: "center", marginTop: "3rem" }}>
+            <button style={S.outlineBtn()} onClick={() => navigate("Services")} onMouseEnter={e => e.target.style.background = "rgba(168,85,247,0.1)"} onMouseLeave={e => e.target.style.background = "transparent"}>
+              View All Services →
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Featured Portfolio */}
+      <section style={{ padding: "6rem 2rem", background: "rgba(124,58,237,0.04)" }}>
+        <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+          <FadeIn><div style={S.tag}>Portfolio</div></FadeIn>
+          <FadeIn delay={0.1}><h2 style={{ ...S.heading, marginBottom: "3rem" }}>Featured <span style={{ background: "linear-gradient(135deg,#a855f7,#7c3aed)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Works</span></h2></FadeIn>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "1.5rem" }}>
+            {PORTFOLIO_ITEMS.slice(0, 6).map((item, i) => (
+              <FadeIn key={i} delay={i * 0.07}>
+                <div style={{ borderRadius: "16px", overflow: "hidden", cursor: "pointer", position: "relative", height: `${item.h}px`, background: `linear-gradient(135deg, ${item.color}, #1a0533)`, transition: "transform 0.3s" }}
+                  onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.03)"; e.currentTarget.querySelector(".overlay").style.opacity = "1"; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.querySelector(".overlay").style.opacity = "0"; }}
+                  onClick={() => setModalItem(item)}>
+                  {/* Decorative design preview */}
+                  <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", align
